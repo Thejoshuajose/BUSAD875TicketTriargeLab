@@ -37,7 +37,7 @@ export function rulesTriage(text: string): TriageDraft {
   const t = text.toLowerCase();
   const scores = CATEGORIES.map((c) => ({ c, hits: KW[c].filter((w) => has(t, w)) }));
   scores.sort((a, b) => b.hits.length - a.hits.length);
-  const top = scores[0], second = scores[1];
+  const top = scores[0]!, second = scores[1]!;
   const security = SECURITY_KW.filter((w) => has(t, w));
   const critical = CRITICAL_KW.filter((w) => has(t, w));
   const high = HIGH_KW.filter((w) => has(t, w));

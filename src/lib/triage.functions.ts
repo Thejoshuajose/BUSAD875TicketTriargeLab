@@ -25,7 +25,7 @@ const schema = {
 export const aiTriage = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ text: z.string().min(1).max(4000) }).parse(i))
   .handler(async ({ data }): Promise<AiResult> => {
-    const key = process.env.LOVABLE_API_KEY;
+    const key = process.env['LOVABLE_API_KEY'];
     if (!key) return { mode: "unavailable", reason: "Built-in AI service not configured for this project." };
     try {
       const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
