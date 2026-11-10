@@ -177,7 +177,7 @@ export function rulesTriage(text: string): TriageDraft {
     /\b(?:access is working|can log in|login was restored|no login)\b/.test(normalize(text))
   )
     category = "Billing";
-  let priority: Priority = /\b(?:urgent|asap|cannot|can't|unable|blocked|deadline)\b/.test(e.t)
+  const priority: Priority = /\b(?:urgent|asap|cannot|can't|unable|blocked|deadline)\b/.test(e.t)
     ? "P1 High"
     : category === "Website incident" || category === "Access issue"
       ? "P2 Medium"
