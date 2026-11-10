@@ -70,6 +70,8 @@ const recordSchema = z.object({
   review: draftSchema.optional(),
   decision: z.enum(decisions),
   escalation: z.array(z.string().max(10000)).max(50),
+  reviewReasons: z.array(z.string().max(10000)).max(50).optional(),
+  disposition: z.enum(["escalate", "clarify", "review"]).optional(),
   policyVersion: z.string().max(100).optional(),
   notes: z.string().max(2000).optional(),
   decidedAt: z.string().max(100).optional(),
@@ -155,7 +157,7 @@ function makeCsv(records: RecordEntry[]) {
         d.confidence,
         d.rationale,
         r.notes,
-        r.escalation.join("; "),
+        (r.reviewReasons ?? r.escalation).join("; "),
       ]
         .map(csvCell)
         .join(",");
@@ -273,6 +275,7 @@ function Lab() {
       modeNote = "Live model unavailable or invalid output: rules fallback used.";
     }
     if (token !== request.current) return;
+    const initialDisposition = reviewDisposition(draft, input);
     const entry: RecordEntry = {
       id: crypto.randomUUID(),
       time: new Date().toISOString(),
@@ -281,7 +284,9 @@ function Lab() {
       modeNote,
       draft,
       decision: "pending",
-      escalation: reviewDisposition(draft, input).reasons,
+      escalation: initialDisposition.kind === "escalate" ? initialDisposition.reasons : [],
+      reviewReasons: initialDisposition.reasons,
+      disposition: initialDisposition.kind,
       policyVersion: POLICY_VERSION,
       notes: "",
     };
@@ -322,7 +327,9 @@ function Lab() {
               ...r,
               final: edit,
               decision,
-              escalation: disposition.reasons,
+              escalation: disposition.kind === "escalate" ? disposition.reasons : [],
+              reviewReasons: disposition.reasons,
+              disposition: disposition.kind,
               decidedAt: new Date().toISOString(),
               decisionPolicyVersion: POLICY_VERSION,
               corrections,
@@ -403,7 +410,7 @@ function Lab() {
           <ShieldAlert size={18} aria-hidden="true" />
           <p>
             <strong>Synthetic tickets only.</strong> No client emails, personal information or secrets. Decisions stay
-            in this browser; nothing is sent or routed.
+            in this browser; no tickets are routed.
           </p>
         </div>
         <section className="metrics" aria-label="Local review counts">
