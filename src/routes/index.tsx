@@ -70,8 +70,6 @@ const recordSchema = z.object({
   review: draftSchema.optional(),
   decision: z.enum(decisions),
   escalation: z.array(z.string().max(10000)).max(50),
-  reviewReasons: z.array(z.string().max(10000)).max(50).optional(),
-  disposition: z.enum(["escalate", "clarify", "review"]).optional(),
   policyVersion: z.string().max(100).optional(),
   notes: z.string().max(2000).optional(),
   decidedAt: z.string().max(100).optional(),
@@ -157,7 +155,7 @@ function makeCsv(records: RecordEntry[]) {
         d.confidence,
         d.rationale,
         r.notes,
-        (r.reviewReasons ?? r.escalation).join("; "),
+        r.escalation.join("; "),
       ]
         .map(csvCell)
         .join(",");
@@ -275,7 +273,6 @@ function Lab() {
       modeNote = "Live model unavailable or invalid output: rules fallback used.";
     }
     if (token !== request.current) return;
-    const initialDisposition = reviewDisposition(draft, input);
     const entry: RecordEntry = {
       id: crypto.randomUUID(),
       time: new Date().toISOString(),
@@ -284,9 +281,7 @@ function Lab() {
       modeNote,
       draft,
       decision: "pending",
-      escalation: initialDisposition.kind === "escalate" ? initialDisposition.reasons : [],
-      reviewReasons: initialDisposition.reasons,
-      disposition: initialDisposition.kind,
+      escalation: reviewDisposition(draft, input).reasons,
       policyVersion: POLICY_VERSION,
       notes: "",
     };
@@ -327,9 +322,7 @@ function Lab() {
               ...r,
               final: edit,
               decision,
-              escalation: disposition.kind === "escalate" ? disposition.reasons : [],
-              reviewReasons: disposition.reasons,
-              disposition: disposition.kind,
+              escalation: disposition.reasons,
               decidedAt: new Date().toISOString(),
               decisionPolicyVersion: POLICY_VERSION,
               corrections,

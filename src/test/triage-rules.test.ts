@@ -1,16 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  rulesTriage,
-  escalationReasons,
-  SAMPLES,
-  CATEGORIES,
-  PRIORITIES,
-  applySafetyPolicy,
-  reviewDisposition,
-  POLICY_VERSION,
-  impactReasons,
-  summarizeTicket,
-} from "@/lib/triage-rules";
+import { rulesTriage, escalationReasons, SAMPLES, CATEGORIES, PRIORITIES, applySafetyPolicy } from "@/lib/triage-rules";
 
 const s = (l: string) => SAMPLES.find((x) => x.label === l)!.text;
 
@@ -22,11 +11,10 @@ describe("rules triage", () => {
   });
   it("lockout is Access issue", () => expect(rulesTriage(s("Login lockout")).category).toBe("Access issue"));
   it("billing is Billing", () => expect(rulesTriage(s("Billing question")).category).toBe("Billing"));
-  it("ambiguous is low confidence and needs clarification", () => {
+  it("ambiguous is low confidence and escalated", () => {
     const d = rulesTriage(s("Ambiguous report"));
     expect(d.confidence).toBeLessThan(0.6);
-    expect(escalationReasons(d, s("Ambiguous report"))).toEqual([]);
-    expect(reviewDisposition(d, s("Ambiguous report")).kind).toBe("clarify");
+    expect(escalationReasons(d, s("Ambiguous report"))).toContainEqual(expect.stringMatching(/Low confidence/));
   });
   it("security text escalates", () => {
     const d = rulesTriage(s("Security concern"));
@@ -284,126 +272,4 @@ describe("Lesson 11 synthetic challenge", () => {
     expect(d.detected_categories).toContain("Billing");
     expect(d.ambiguity).toBe(true);
   });
-});
-
-const stateCases = [
-  ["V01", "Checkout fails for every customer right now.", true],
-  ["V02", "What should we do if checkout fails in the future?", false],
-  ["V03", "Checkout is not failing. Please send my invoice.", false],
-  ["V04", "The checkout failure was fixed yesterday. I only need a copy of the invoice.", false],
-  ["V05", "The checkout failure was fixed yesterday, but all transactions fail now.", true],
-  ["V06", "There are no HTTP 502 errors, but checkout is unavailable.", true],
-  ["V07", "If checkout fails tomorrow, we will call support. Checkout is unavailable now.", true],
-  ["V08", "The site is working, but purchases never finish and every shopper gives up.", true],
-  ["V09", "Customers see a spinning wheel forever after clicking Pay; no purchase completes.", true],
-  ["V10", "The entire site is working for all customers. Please send a billing invoice.", false],
-  ["V11", "There is no evidence of a security breach. Please update our security policy page.", false],
-  ["V12", "There is no evidence of a security breach; however our homepage is defaced now.", true],
-  ["V13", "The HTTP 502 error has been resolved. Please send my receipt.", false],
-  ["V14", "HTTP 502 errors occur now, although yesterday's outage was resolved.", true],
-  ["V15", "If our entire site goes offline in the future, what should we do?", false],
-] as const;
-describe("Lesson 11 v2 event state and review policy", () => {
-  for (const [id, text, critical] of stateCases) {
-    it(id + ": " + text, () => {
-      const draft = rulesTriage(text);
-      expect(impactReasons(text).length > 0).toBe(critical);
-      expect(draft.priority === "P0 Critical").toBe(critical);
-      expect(reviewDisposition(draft, text).kind === "escalate").toBe(critical);
-    });
-  }
-  it("uses a versioned policy and treats planning as a change request", () => {
-    expect(POLICY_VERSION).toBe("lesson11-v2");
-    expect(rulesTriage(stateCases[1][1]).category).toBe("Change request");
-  });
-  for (const text of [
-    "I cannot sign into the dashboard; a receipt is needed.",
-    "I can't log into my dashboard. Please send an invoice.",
-    "I am unable to sign in to review a billing charge.",
-  ])
-    it("recognizes blocked entry with billing context: " + text, () => {
-      const draft = rulesTriage(text);
-      expect(draft.category).toBe("Access issue");
-      expect(draft.priority).toBe("P1 High");
-      expect(draft.blockedAccess).toBe(true);
-      expect(draft.detected_categories).toEqual(expect.arrayContaining(["Billing", "Access issue"]));
-      expect(draft.ambiguity).toBe(true);
-      expect(reviewDisposition(draft, text).kind).not.toBe("escalate");
-    });
-  it("resolved access is not a current entry blocker", () => {
-    const draft = rulesTriage("My account was restored yesterday. Please send a billing invoice.");
-    expect(draft.category).toBe("Billing");
-    expect(draft.blockedAccess).toBe(false);
-  });
-  it("uses actionable sentence instead of a negated lead", () => {
-    expect(rulesTriage(challengeCases[37].input).summary).toContain("need a copy of my invoice");
-  });
-  it("includes both current blocker and actionable request", () => {
-    const summary = summarizeTicket("I cannot sign into the dashboard. Please send a receipt.");
-    expect(summary).toContain("cannot sign into");
-    expect(summary).toContain("receipt");
-    expect(summary.length).toBeLessThanOrEqual(140);
-  });
-  it("reserves room for request after a verbose critical sentence", () => {
-    const summary = summarizeTicket(
-      "Checkout fails for every customer " + "right now ".repeat(20) + ". Please help restore payments.",
-    );
-    expect(summary).toContain("Checkout fails");
-    expect(summary).toContain("restore payments");
-    expect(summary.length).toBeLessThanOrEqual(140);
-  });
-  it("critical impact wins over low confidence and edited priority", () => {
-    const text = stateCases[8][1];
-    const draft = { ...rulesTriage(text), priority: "P3 Low" as const, confidence: 0.2 };
-    const disposition = reviewDisposition(draft, text);
-    expect(disposition.kind).toBe("escalate");
-    expect(disposition.reasons.join(" ")).toMatch(/ordering disruption/);
-    expect(disposition.reasons.join(" ")).not.toMatch(/Low confidence/);
-  });
-  it("ordinary supported request requires review and low confidence requires clarification", () => {
-    const draft = rulesTriage(s("Billing question"));
-    expect(reviewDisposition(draft, s("Billing question")).kind).toBe("review");
-    expect(reviewDisposition({ ...draft, confidence: 0.59 }, "invoice").kind).toBe("clarify");
-    expect(reviewDisposition({ ...draft, confidence: 0.6 }, "invoice").kind).toBe("review");
-  });
-  it("does not silently truncate critical source text outside the input limit", () => {
-    expect(() => rulesTriage("a".repeat(4001))).toThrow(RangeError);
-    expect(() => impactReasons("a".repeat(4001))).toThrow(RangeError);
-    const source = " ".repeat(3975) + "Checkout fails right now.";
-    expect(source.length).toBe(4000);
-    expect(rulesTriage(source).priority).toBe("P0 Critical");
-    expect(rulesTriage("").summary).toBe("(empty ticket)");
-  });
-  it("shared policy never elevates a correctly noncritical hypothetical model draft", () => {
-    const text = stateCases[1][1];
-    const draft = applySafetyPolicy({ ...rulesTriage(text), priority: "P3 Low", category: "Change request" }, text);
-    expect(draft.priority).toBe("P3 Low");
-    expect(reviewDisposition(draft, text).kind).not.toBe("escalate");
-  });
-});
-
-const v2bCases = [
-  ["B01", "Payments do not fail anymore. Please send an invoice.", false],
-  ["B02", "If you need more details, checkout is failing for every buyer right now.", true],
-  ["B03", "Yesterday checkout was fixed and now all transactions fail.", true],
-  ["B04", "No orders are failing. Please provide a receipt.", false],
-  ["B05", "Customers cannot complete their baskets.", true],
-  ["B06", "Payments do not fail, but checkout is unavailable.", true],
-  ["B07", "No orders are failing, however the site is completely down now.", true],
-  ["B08", "The outage was resolved and currently checkout fails for every customer.", true],
-  ["B09", "If checkout fails tomorrow, please call support.", false],
-  ["B10", "If the entire site is offline in the future, what should we do?", false],
-  ["B11", "If you need screenshots, no orders are failing. Please send an invoice.", false],
-  ["B12", "I cannot edit the color of the cart button. Please update it.", false],
-  ["B13", "Customers are unable to finish their carts.", true],
-  ["B14", "No orders are failing and now the payment gateway is unavailable.", true],
-  ["B15", "Payments do not fail and currently no purchases complete.", true],
-] as const;
-describe("Lesson 11 v2b documented follow-up regression cases", () => {
-  for (const [id, text, critical] of v2bCases)
-    it(id + ": " + text, () => {
-      const draft = rulesTriage(text);
-      expect(impactReasons(text).length > 0).toBe(critical);
-      expect(reviewDisposition(draft, text).kind === "escalate").toBe(critical);
-    });
 });

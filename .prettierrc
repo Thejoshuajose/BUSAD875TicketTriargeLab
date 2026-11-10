@@ -2,20 +2,5 @@
   "printWidth": 100,
   "semi": true,
   "singleQuote": false,
-  "trailingComma": "all",
-  "overrides": [
-    {
-      "files": [
-        "src/lib/triage-rules.ts",
-        "src/lib/triage.functions.ts",
-        "src/routes/index.tsx",
-        "src/routes/__root.tsx",
-        "src/test/triage-rules.test.ts",
-        "src/test/app-routing.test.tsx"
-      ],
-      "options": {
-        "printWidth": 120
-      }
-    }
-  ]
+  "trailingComma": "all"
 }
