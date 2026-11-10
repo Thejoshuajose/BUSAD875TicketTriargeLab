@@ -13,6 +13,7 @@ export interface TriageDraft {
   uncertainty: string;
   detected_categories?: Category[];
   ambiguity?: boolean;
+  blockedAccess?: boolean;
   policy_notes?: string[];
 }
 
@@ -37,7 +38,20 @@ const KW: Record<Category, string[]> = {
     "offline",
     "timeout",
   ],
-  "Access issue": ["login", "log in", "password", "locked", "lockout", "2fa", "mfa", "access", "sign in", "account"],
+  "Access issue": [
+    "login",
+    "log in",
+    "password",
+    "locked",
+    "lockout",
+    "2fa",
+    "mfa",
+    "access",
+    "sign in",
+    "sign into",
+    "log into",
+    "account",
+  ],
   Billing: [
     "invoice",
     "invoices",
@@ -69,7 +83,7 @@ export const SECURITY_KW = [
   "leaked",
 ];
 export const CONFIDENCE_THRESHOLD = 0.6;
-export const POLICY_VERSION = "lesson11-v1";
+export const POLICY_VERSION = "lesson11-v2";
 
 export const normalize = (text: string) => text.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ").trim();
 /** Match complete words/phrases. "down" must not match "download" or "breakdown". */
@@ -77,17 +91,38 @@ export function hasPhrase(text: string, phrase: string): boolean {
   const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
   return new RegExp(`\\b${escaped}\\b`, "i").test(text);
 }
-/** Narrow explicit negation handling, not general language understanding. Contrast clauses remain separate. */
+/** Bounded, clause-scoped cues, not general language understanding. Never discard a whole ticket. */
+export const MAX_INPUT_LENGTH = 4000;
+function bounded(text: string): string {
+  if (text.length > MAX_INPUT_LENGTH) throw new RangeError("Ticket must be 4000 characters or fewer.");
+  return text;
+}
+function clauses(text: string): string[] {
+  return normalize(bounded(text))
+    .split(/[.;!?]|\b(?:but|however|although|yet|whereas)\b|(?:,|\band)\s*(?:now|currently)\b/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+function inactiveClause(clause: string): boolean {
+  return (
+    /\b(?:what if|in case|hypothetically|in the future|could potentially)\b/.test(clause) ||
+    /\bif\s+(?:(?:our|the|a|an|all|any)\s+){0,2}(?:checkout|payments?|transactions?|purchases?|orders?|site|website|entire site|whole site|customers?|login|access|we cannot|we can't)\b/.test(
+      clause,
+    ) ||
+    /\b(?:was|were|has been|have been|is now)\s+(?:fixed|resolved|restored|repaired)\b|\b(?:outage|failure|issue|incident)\s+(?:is|was)\s+(?:over|resolved)\b/.test(
+      clause,
+    ) ||
+    /^(?:there (?:is|are) )?no (?:payment failures?|http 5\d\d|login|account access|evidence of|signs? of|outage|security incident)/.test(
+      clause,
+    ) ||
+    /\b(?:is|are) not (?:down|offline|failing|broken|unavailable|an? (?:storefront )?outage)\b/.test(clause) ||
+    /\b(?:payments?|transactions?|checkout|purchases?|orders?)\s+(?:do|does) not (?:fail|time out)\b/.test(clause) ||
+    /\bno (?:payments?|transactions?|purchases?|orders?) (?:are|is) (?:failing|declined|rejected)\b/.test(clause)
+  );
+}
 function activeText(text: string): string {
-  return normalize(text)
-    .split(/[.;!?]|\b(?:but|however|although)\b/)
-    .map((clause) => clause.trim())
-    .filter(
-      (clause) =>
-        !/^(?:there (?:is|are) )?no (?:payment failures?|http 5\d\d|login|account access|evidence of|signs? of|outage|security incident)/.test(
-          clause,
-        ),
-    )
+  return clauses(text)
+    .filter((clause) => !inactiveClause(clause))
     .map((clause) =>
       clause.replace(
         /\bnot (?:an? )?(?:outage|storefront outage|security incident|payment failure)(?: investigation)?\b/g,
@@ -97,7 +132,7 @@ function activeText(text: string): string {
     .join(". ");
 }
 function accessBlocked(text: string): boolean {
-  return /\b(?:cannot|can't|unable to)\s+(?:(?:successfully|currently)\s+)?(?:log in|login|sign in|access)\b|\blocked out\b|\baccount (?:is )?locked\b|\bpassword reset\b.{0,45}\b(?:fails?|broken|does not work)\b|\b(?:mfa|2fa)\b.{0,35}\b(?:rejected|fails?|blocked)\b/.test(
+  return /\b(?:cannot|can't|unable to)\s+(?:(?:successfully|currently)\s+)?(?:log in(?:to)?|login|sign in(?:to)?|access)\b|\blocked out\b|\baccount (?:is )?locked\b|\bpassword reset\b.{0,45}\b(?:fails?|broken|does not work)\b|\b(?:mfa|2fa)\b.{0,35}\b(?:rejected|fails?|blocked)\b/.test(
     text,
   );
 }
@@ -111,13 +146,24 @@ export function impactReasons(text: string): string[] {
   const disruptedTransaction = t.split(/[.,;]|\band\b/).some((clause) => {
     const transaction = /\b(?:payments?|transactions?|checkout|purchases?|orders?|pay)\b/.test(clause);
     const failure =
-      /\b(?:fail|fails|failed|failing|declined|declining|rejected|unavailable|timeout|cannot|can't|unable|nobody|not working|does nothing)\b|\bno (?:customer|orders?)\b|\bnot be (?:completed|processed)\b|\bmoney taken\b/.test(
+      /\b(?:fail|fails|failed|failing|declined|declining|rejected|unavailable|timeout|cannot|can't|unable|nobody|not working|does nothing)\b|\bno (?:customer|orders?|purchases?)\b|\bnever (?:finish|finishes|complete|completes)\b|\b(?:do|does) not (?:finish|complete)\b|\bnot be (?:completed|processed)\b|\bmoney taken\b/.test(
         clause,
       );
-    return transaction && failure;
+    const blockedBasketCompletion =
+      /\b(?:baskets?|carts?)\b/.test(clause) &&
+      /\b(?:cannot|can't|unable to)\s+(?:complete|finish|purchase|check out)\b|\b(?:never|do not|does not)\s+(?:complete|finish)\b/.test(
+        clause,
+      );
+    return (transaction && failure) || blockedBasketCompletion;
   });
   if (disruptedTransaction) reasons.push("Payment or ordering disruption requires manual escalation");
-  if (/\b(?:outage|downtime|completely down|entire site|whole site|all customers|losing sales)\b/.test(t))
+  if (
+    /\b(?:outage|downtime|completely down|losing sales)\b/.test(t) ||
+    /\b(?:entire site|whole site|all customers)\b.{0,80}\b(?:down|offline|unreachable|unavailable|not working|error)\b/.test(
+      t,
+    ) ||
+    /\b(?:down|offline|unreachable|unavailable)\b.{0,80}\b(?:entire site|whole site|all customers)\b/.test(t)
+  )
     reasons.push("Potential widespread service disruption");
   return [...new Set(reasons)];
 }
@@ -127,11 +173,14 @@ function evidence(text: string) {
     category,
     hits: KW[category].filter((word) => hasPhrase(t, word)),
   })).sort((a, b) => b.hits.length - a.hits.length);
+  const blocked = accessBlocked(t);
+  const categories = scores.filter((s) => s.hits.length > 0).map((s) => s.category);
+  if (blocked && !categories.includes("Access issue")) categories.push("Access issue");
   return {
     t,
     scores,
-    categories: scores.filter((s) => s.hits.length > 0).map((s) => s.category),
-    blocked: accessBlocked(t),
+    categories,
+    blocked,
     impact: impactReasons(text),
   };
 }
@@ -163,6 +212,7 @@ export function applySafetyPolicy(draft: TriageDraft, text: string): TriageDraft
     suggested_owner: OWNERS[category],
     detected_categories: e.categories,
     ambiguity: mixed,
+    blockedAccess: e.blocked,
     policy_notes: notes,
     rationale: notes.length ? `${draft.rationale} Policy: ${notes.join("; ")}.` : draft.rationale,
   };
@@ -177,6 +227,7 @@ export function rulesTriage(text: string): TriageDraft {
     /\b(?:access is working|can log in|login was restored|no login)\b/.test(normalize(text))
   )
     category = "Billing";
+  if (!e.t && /\b(?:what should|what if|in the future|in case)\b/.test(normalize(text))) category = "Change request";
   const priority: Priority = /\b(?:urgent|asap|cannot|can't|unable|blocked|deadline)\b/.test(e.t)
     ? "P1 High"
     : category === "Website incident" || category === "Access issue"
@@ -194,10 +245,10 @@ export function rulesTriage(text: string): TriageDraft {
   ]
     .filter(Boolean)
     .join(" ");
-  const first = text.trim().split(/(?<=[.!?])\s+/)[0] ?? "";
+  const summary = summarizeTicket(text);
   return applySafetyPolicy(
     {
-      summary: first.length > 140 ? first.slice(0, 137) + "..." : first || "(empty ticket)",
+      summary,
       category,
       priority,
       suggested_owner: OWNERS[category],
@@ -214,9 +265,49 @@ export function rulesTriage(text: string): TriageDraft {
 export function escalationReasons(draft: TriageDraft, text: string): string[] {
   const reasons = impactReasons(text);
   if (draft.priority === "P0 Critical") reasons.push("Priority is P0 Critical");
-  if (draft.confidence < CONFIDENCE_THRESHOLD)
-    reasons.push(`Low confidence (${Math.round(draft.confidence * 100)}% < ${CONFIDENCE_THRESHOLD * 100}%)`);
+
   return [...new Set(reasons)];
+}
+
+export function reviewDisposition(
+  draft: TriageDraft,
+  text: string,
+): { kind: "escalate" | "clarify" | "review"; reasons: string[] } {
+  const reasons = escalationReasons(draft, text);
+  if (reasons.length) return { kind: "escalate", reasons };
+  if (draft.confidence < CONFIDENCE_THRESHOLD)
+    return {
+      kind: "clarify",
+      reasons: [
+        `Low confidence (${Math.round(draft.confidence * 100)}% < ${CONFIDENCE_THRESHOLD * 100}%); ask for the current symptom and impact.`,
+      ],
+    };
+  return { kind: "review", reasons: ["Coordinator review required before any action."] };
+}
+/** Extract source wording, prioritizing a current blocker, then an actionable request. */
+export function summarizeTicket(text: string): string {
+  bounded(text);
+  const sentences = text
+    .trim()
+    .split(/(?<=[.!?;])\s+/)
+    .filter(Boolean);
+  const ranked = sentences
+    .map((sentence, index) => {
+      const active = activeText(sentence);
+      const critical = impactReasons(sentence).length > 0 || accessBlocked(active);
+      const request = /\b(?:please|need|needed|could you|can i|explain|send|provide|update|add|refund)\b/.test(active);
+      return { sentence, index, score: critical ? 3 : request ? 2 : active ? 1 : 0 };
+    })
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+  const first = ranked[0];
+  if (!first) return "(empty ticket)";
+  const next = ranked.find((item) => item.index !== first.index && item.score >= 2);
+  // Reserve room for both the blocker and request when both exist.
+  const clip = (value: string, limit: number) =>
+    value.length <= limit ? value : value.slice(0, limit - 3).trimEnd() + "...";
+  return next
+    ? `${clip(first.sentence, 90)} ${clip(next.sentence, 139 - Math.min(first.sentence.length, 90))}`
+    : clip(first.sentence, 140);
 }
 
 export const SAMPLES = [
