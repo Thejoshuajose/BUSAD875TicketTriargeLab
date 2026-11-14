@@ -1,0 +1,248 @@
+{
+  "scope": "Fresh synthetic probes, AI-authored expected labels, no independent reviewers or live-model execution",
+  "results": [
+    {
+      "id": "N01",
+      "input": "Please send my receipt.",
+      "expected": {
+        "category": "Billing",
+        "priority": "P3 Low",
+        "disposition": "review"
+      },
+      "actual": {
+        "summary": "Please send my receipt.",
+        "category": "Billing",
+        "priority": "P3 Low",
+        "suggested_owner": "Billing Specialist",
+        "rationale": "Whole-word/phrase matches: receipt.",
+        "confidence": 0.63,
+        "uncertainty": "Rule confidence is a heuristic, not a calibrated probability; human review is required.",
+        "detected_categories": [
+          "Billing"
+        ],
+        "ambiguity": false,
+        "blockedAccess": false,
+        "policy_notes": []
+      },
+      "actualDisposition": "review",
+      "passed": true
+    },
+    {
+      "id": "N02",
+      "input": "I cannot log into the portal. Please provide my invoice.",
+      "expected": {
+        "category": "Access issue",
+        "priority": "P1 High",
+        "disposition": "review"
+      },
+      "actual": {
+        "summary": "I cannot log into the portal. Please provide my invoice.",
+        "category": "Access issue",
+        "priority": "P1 High",
+        "suggested_owner": "Identity & Access Specialist",
+        "rationale": "Whole-word/phrase matches: log into. Policy: Current account-entry blocker takes precedence over billing context; Mixed access/billing intent: access is the immediate blocker.",
+        "confidence": 0.63,
+        "uncertainty": "Multiple categories have equal keyword evidence. Access blocker detected; confirm the exact login failure.",
+        "detected_categories": [
+          "Access issue",
+          "Billing"
+        ],
+        "ambiguity": true,
+        "blockedAccess": true,
+        "policy_notes": [
+          "Current account-entry blocker takes precedence over billing context",
+          "Mixed access/billing intent: access is the immediate blocker"
+        ]
+      },
+      "actualDisposition": "review",
+      "passed": true
+    },
+    {
+      "id": "N03",
+      "input": "Our checkout returns HTTP 503 to all buyers.",
+      "expected": {
+        "category": "Website incident",
+        "priority": "P0 Critical",
+        "disposition": "escalate"
+      },
+      "actual": {
+        "summary": "Our checkout returns HTTP 503 to all buyers.",
+        "category": "Website incident",
+        "priority": "P0 Critical",
+        "suggested_owner": "Hosting & Reliability Specialist",
+        "rationale": "No strong category keywords found. Policy: Server-side 5xx failure requires manual investigation.",
+        "confidence": 0.35,
+        "uncertainty": "No category evidence; default category needs confirmation.",
+        "detected_categories": [],
+        "ambiguity": false,
+        "blockedAccess": false,
+        "policy_notes": [
+          "Server-side 5xx failure requires manual investigation"
+        ]
+      },
+      "actualDisposition": "escalate",
+      "passed": true
+    },
+    {
+      "id": "N04",
+      "input": "We discuss failed payments in a training guide, but checkout is unavailable right now.",
+      "expected": {
+        "category": "Website incident",
+        "priority": "P0 Critical",
+        "disposition": "escalate"
+      },
+      "actual": {
+        "summary": "We discuss failed payments in a training guide, but checkout is unavailable right now.",
+        "category": "Website incident",
+        "priority": "P0 Critical",
+        "suggested_owner": "Hosting & Reliability Specialist",
+        "rationale": "Whole-word/phrase matches: payments. Policy: Payment or ordering disruption requires manual escalation.",
+        "confidence": 0.63,
+        "uncertainty": "Rule confidence is a heuristic, not a calibrated probability; human review is required.",
+        "detected_categories": [
+          "Billing"
+        ],
+        "ambiguity": false,
+        "blockedAccess": false,
+        "policy_notes": [
+          "Payment or ordering disruption requires manual escalation"
+        ]
+      },
+      "actualDisposition": "escalate",
+      "passed": true
+    },
+    {
+      "id": "N05",
+      "input": "Customers reach checkout but the Pay button keeps spinning and their purchase never materializes.",
+      "expected": {
+        "category": "Website incident",
+        "priority": "P0 Critical",
+        "disposition": "escalate"
+      },
+      "actual": {
+        "summary": "Customers reach checkout but the Pay button keeps spinning and their purchase never materializes.",
+        "category": "Website incident",
+        "priority": "P2 Medium",
+        "suggested_owner": "Hosting & Reliability Specialist",
+        "rationale": "No strong category keywords found.",
+        "confidence": 0.35,
+        "uncertainty": "No category evidence; default category needs confirmation.",
+        "detected_categories": [],
+        "ambiguity": false,
+        "blockedAccess": false,
+        "policy_notes": []
+      },
+      "actualDisposition": "clarify",
+      "passed": false
+    },
+    {
+      "id": "N06",
+      "input": "Please refund invoice 17.",
+      "expected": {
+        "category": "Billing",
+        "priority": "P3 Low",
+        "disposition": "review"
+      },
+      "actual": {
+        "summary": "Please refund invoice 17.",
+        "category": "Billing",
+        "priority": "P3 Low",
+        "suggested_owner": "Billing Specialist",
+        "rationale": "Whole-word/phrase matches: invoice, refund.",
+        "confidence": 0.56,
+        "uncertainty": "Rule confidence is a heuristic, not a calibrated probability; human review is required.",
+        "detected_categories": [
+          "Billing"
+        ],
+        "ambiguity": false,
+        "blockedAccess": false,
+        "policy_notes": []
+      },
+      "actualDisposition": "clarify",
+      "passed": false
+    },
+    {
+      "id": "N07",
+      "input": "This training guide describes what to do because payments are failing for all customers right now.",
+      "expected": {
+        "category": "Website incident",
+        "priority": "P0 Critical",
+        "disposition": "escalate"
+      },
+      "actual": {
+        "summary": "This training guide describes what to do because payments are failing for all customers right now.",
+        "category": "Website incident",
+        "priority": "P0 Critical",
+        "suggested_owner": "Hosting & Reliability Specialist",
+        "rationale": "Whole-word/phrase matches: payments. Policy: Payment or ordering disruption requires manual escalation.",
+        "confidence": 0.63,
+        "uncertainty": "Rule confidence is a heuristic, not a calibrated probability; human review is required.",
+        "detected_categories": [
+          "Billing"
+        ],
+        "ambiguity": false,
+        "blockedAccess": false,
+        "policy_notes": [
+          "Payment or ordering disruption requires manual escalation"
+        ]
+      },
+      "actualDisposition": "escalate",
+      "passed": true
+    },
+    {
+      "id": "N09",
+      "input": "No puedo iniciar sesión para ver mi factura.",
+      "expected": {
+        "category": "Access issue",
+        "priority": "P1 High",
+        "disposition": "review"
+      },
+      "actual": {
+        "summary": "No puedo iniciar sesión para ver mi factura.",
+        "category": "Website incident",
+        "priority": "P2 Medium",
+        "suggested_owner": "Hosting & Reliability Specialist",
+        "rationale": "No strong category keywords found.",
+        "confidence": 0.35,
+        "uncertainty": "No category evidence; default category needs confirmation.",
+        "detected_categories": [],
+        "ambiguity": false,
+        "blockedAccess": false,
+        "policy_notes": []
+      },
+      "actualDisposition": "clarify",
+      "passed": false
+    },
+    {
+      "id": "N08",
+      "input": "The billing login is working; please provide a receipt.",
+      "expected": {
+        "category": "Billing",
+        "priority": "P3 Low",
+        "disposition": "review"
+      },
+      "actual": {
+        "summary": "please provide a receipt.",
+        "category": "Billing",
+        "priority": "P3 Low",
+        "suggested_owner": "Billing Specialist",
+        "rationale": "Whole-word/phrase matches: billing, receipt. Policy: Mixed access/billing vocabulary: coordinator must confirm the primary request.",
+        "confidence": 0.71,
+        "uncertainty": "Rule confidence is a heuristic, not a calibrated probability; human review is required.",
+        "detected_categories": [
+          "Billing",
+          "Access issue"
+        ],
+        "ambiguity": true,
+        "blockedAccess": false,
+        "policy_notes": [
+          "Mixed access/billing vocabulary: coordinator must confirm the primary request"
+        ]
+      },
+      "actualDisposition": "review",
+      "passed": true
+    }
+  ],
+  "passed": 6,
+  "total": 9
+}

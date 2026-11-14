@@ -1041,3 +1041,50 @@ textarea.rationale-input {
     scroll-behavior: auto !important;
   }
 }
+
+.context-evidence {
+  margin: 1rem 0;
+  padding: 0.8rem 0;
+  border-block: 1px solid var(--border);
+}
+.context-evidence summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.context-evidence li {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.evidence-list {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.evidence-list details {
+  padding: 0.8rem 1rem;
+  border: 1px solid #d9e1e7;
+  border-radius: 0.5rem;
+}
+.evidence-list summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.evidence-list p {
+  margin-top: 0.6rem;
+  overflow-wrap: anywhere;
+}
+.queue-filters {
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .section-heading {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  .queue-filters > * {
+    width: 100%;
+  }
+  .evidence-list summary {
+    font-size: 0.9rem;
+  }
+}

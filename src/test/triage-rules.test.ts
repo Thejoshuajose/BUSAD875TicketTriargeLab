@@ -313,7 +313,7 @@ describe("Lesson 11 v2 event state and review policy", () => {
     });
   }
   it("uses a versioned policy and treats planning as a change request", () => {
-    expect(POLICY_VERSION).toBe("lesson11-v2");
+    expect(POLICY_VERSION).toBe("lesson11-v3");
     expect(rulesTriage(stateCases[1][1]).category).toBe("Change request");
   });
   for (const text of [

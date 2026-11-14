@@ -18,12 +18,14 @@ import {
   OWNERS,
   SAMPLES,
   rulesTriage,
+  incidentContext,
   reviewDisposition,
   POLICY_VERSION,
   type TriageDraft,
   type Category,
   type Priority,
 } from "@/lib/triage-rules";
+import { EvaluationPanel } from "@/components/EvaluationPanel";
 import { aiTriage } from "@/lib/triage.functions";
 
 export const Route = createFileRoute("/")({
@@ -181,6 +183,7 @@ function Lab() {
   const [feedback, setFeedback] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
   const reviewHeading = useRef<HTMLHeadingElement>(null);
   const current = records.find((r) => r.id === currentId);
   const edit = current?.final ?? current?.review ?? current?.draft;
@@ -242,6 +245,12 @@ function Lab() {
   }
   async function analyze() {
     if (busyRef.current || !ready || !text.trim() || text.length > 4000) return;
+    if (recordsRef.current.length >= 250) {
+      setFeedback(
+        "Queue capacity reached. Existing records are preserved. Export your history; use a separate browser profile for a new test session.",
+      );
+      return;
+    }
     busyRef.current = true;
     setBusy(true);
     setFeedback("");
@@ -368,6 +377,7 @@ function Lab() {
   }
   const visible = records.filter(
     (r) =>
+      (priorityFilter === "all" || (r.final ?? r.review ?? r.draft).priority === priorityFilter) &&
       (filter === "all" || (filter === "accepted" ? r.decision.includes("accepted") : r.decision === filter)) &&
       `${r.input} ${r.id} ${(r.final ?? r.review ?? r.draft).summary}`.toLowerCase().includes(search.toLowerCase()),
   );
@@ -571,6 +581,21 @@ function Lab() {
                     </div>
                   </dl>
                   <p className="engine-note">{current.modeNote}</p>
+                  <details className="context-evidence">
+                    <summary>Incident context evidence</summary>
+                    <p className="small">{incidentContext(current.input).environment}</p>
+                    <p className="small">
+                      Heuristic exclusions below are not verified facts. Check the full original before deciding.
+                    </p>
+                    <strong className="small">Excluded from current-impact matching</strong>
+                    <ul>
+                      {incidentContext(current.input).excludedClauses.length ? (
+                        incidentContext(current.input).excludedClauses.map((c, i) => <li key={i}>{c}</li>)
+                      ) : (
+                        <li>No explicit exclusion cue found.</li>
+                      )}
+                    </ul>
+                  </details>
                   <div className="confidence">
                     <span>
                       Draft confidence <strong>{Math.round(edit.confidence * 100)}%</strong>
@@ -741,13 +766,16 @@ function Lab() {
             </>
           )}
         </section>
+        <EvaluationPanel />
         <section className="panel queue-panel" id="queue" aria-labelledby="queue-heading">
           <div className="section-heading">
             <div className="step-title">
               <span className="step">03</span>
               <div>
                 <h2 id="queue-heading">Review queue & history</h2>
-                <p className="small muted">Latest 250 records in this browser. Export to keep a separate copy.</p>
+                <p className="small muted">
+                  Up to 250 records in this browser. New intake stops at capacity rather than discarding older records.
+                </p>
               </div>
             </div>
             <div className="button-row">
@@ -783,6 +811,18 @@ function Lab() {
                 <option value="clarification needed">Clarification needed</option>
               </select>
             </label>
+            <label className="filter-field">
+              <span className="sr-only">Filter by priority</span>
+              <select className="field" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+                <option value="all">All priorities</option>
+                {PRIORITIES.map((p) => (
+                  <option key={p}>{p}</option>
+                ))}
+              </select>
+            </label>
+            <button className="btn-secondary" disabled={!visible.length} onClick={() => download("json", visible)}>
+              Export filtered JSON
+            </button>
             <span className="small muted">
               {visible.length} of {records.length}
             </span>
@@ -850,11 +890,11 @@ function Lab() {
               clarification, not automatic incident escalation. Input-based incident flags survive priority edits.
             </p>
             <p>
-              History and pending edits are stored in localStorage on this browser, limited to the latest 250 records.
-              Browser clearing or device changes may remove them. No account identity, multi-user synchronization or
-              protected audit storage is provided. Legacy history is retained under its original key. JSON and CSV
-              exports include full synthetic ticket text. Live mode sends ticket text to the configured model service;
-              rules and simulated-outage modes do not send model requests.
+              History and pending edits are stored in localStorage on this browser, limited to 250 records. New intake
+              stops at capacity. Browser clearing or device changes may remove them. No account identity, multi-user
+              synchronization or protected audit storage is provided. Legacy history is retained under its original key.
+              JSON and CSV exports include full synthetic ticket text. Live mode sends ticket text to the configured
+              model service; rules and simulated-outage modes do not send model requests.
             </p>
           </details>
         </footer>

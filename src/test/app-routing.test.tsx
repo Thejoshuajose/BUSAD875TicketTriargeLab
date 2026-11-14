@@ -230,3 +230,59 @@ describe("Triage workbench component", () => {
     expect(savedRecords()[0]?.disposition).toBe("clarify");
   });
 });
+
+describe("November 14 completeness pass", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.clearAllMocks();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+  it("runs known evidence without model calls or queue mutations", async () => {
+    render(<Lab />);
+    fireEvent.click(screen.getByRole("button", { name: "Run known regressions" }));
+    expect(screen.getByText("10 / 10 known scenarios passed")).toBeInTheDocument();
+    expect(aiTriage).not.toHaveBeenCalled();
+    expect(savedRecords()).toHaveLength(0);
+  });
+  it("shows staging exclusion evidence while retaining full original", async () => {
+    render(<Lab />);
+    await analyze("Checkout fails only in our isolated staging simulation; production orders work.");
+    expect(screen.getByText("Incident context evidence")).toBeInTheDocument();
+    expect(screen.getByText("checkout fails only in our isolated staging simulation")).toBeInTheDocument();
+  });
+  it("combines priority and status filters and exports exactly visible records", async () => {
+    const critical = { ...record("All payments fail right now."), id: "critical" };
+    localStorage.setItem(KEY, JSON.stringify([critical, record()]));
+    let exported: Blob | undefined;
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn((b: Blob) => {
+        exported = b;
+        return "blob:test";
+      }),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    render(<Lab />);
+    fireEvent.change(screen.getByLabelText("Filter by priority"), { target: { value: "P0 Critical" } });
+    fireEvent.change(screen.getByLabelText("Filter by decision status"), { target: { value: "pending" } });
+    expect(screen.getByText("1 of 2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Export filtered JSON" }));
+    const data = JSON.parse(await readBlob(exported!));
+    expect(data).toHaveLength(1);
+    expect(data[0].id).toBe("critical");
+  });
+  it("preserves all 250 existing records instead of dropping the oldest on new analysis", () => {
+    const existing = Array.from({ length: 250 }, (_, i) => ({ ...record(), id: `fixture-${i}` }));
+    localStorage.setItem(KEY, JSON.stringify(existing));
+    render(<Lab />);
+    fireEvent.change(screen.getByLabelText("Ticket text"), { target: { value: "Please provide a receipt." } });
+    fireEvent.click(screen.getByRole("button", { name: "Analyze ticket" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Queue capacity reached");
+    expect(savedRecords()).toEqual(existing);
+    expect(aiTriage).not.toHaveBeenCalled();
+  });
+});
