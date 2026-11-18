@@ -83,7 +83,7 @@ export const SECURITY_KW = [
   "leaked",
 ];
 export const CONFIDENCE_THRESHOLD = 0.6;
-export const POLICY_VERSION = "lesson11-v2";
+export const POLICY_VERSION = "lesson11-v3";
 
 export const normalize = (text: string) => text.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ").trim();
 /** Match complete words/phrases. "down" must not match "download" or "breakdown". */
@@ -99,12 +99,16 @@ function bounded(text: string): string {
 }
 function clauses(text: string): string[] {
   return normalize(bounded(text))
-    .split(/[.;!?]|\b(?:but|however|although|yet|whereas)\b|(?:,|\band)\s*(?:now|currently)\b/)
+    .split(/[.;!?]|\b(?:but|however|although|yet|whereas)\b|(?:,|\band)\s*(?:now|currently)\b|\band\s+(?=production\b)/)
     .map((s) => s.trim())
     .filter(Boolean);
 }
 function inactiveClause(clause: string): boolean {
   return (
+    /^would\s+(?:a|an)\b.{0,80}\bcount as\b/.test(clause) ||
+    /\b(?:only (?:in|on) (?:our |the |an? )?(?:isolated )?(?:staging|sandbox|test environment)|isolated staging simulation)\b/.test(
+      clause,
+    ) ||
     /\b(?:what if|in case|hypothetically|in the future|could potentially)\b/.test(clause) ||
     /\bif\s+(?:(?:our|the|a|an|all|any)\s+){0,2}(?:checkout|payments?|transactions?|purchases?|orders?|site|website|entire site|whole site|customers?|login|access|we cannot|we can't)\b/.test(
       clause,
@@ -146,7 +150,7 @@ export function impactReasons(text: string): string[] {
   const disruptedTransaction = t.split(/[.,;]|\band\b/).some((clause) => {
     const transaction = /\b(?:payments?|transactions?|checkout|purchases?|orders?|pay)\b/.test(clause);
     const failure =
-      /\b(?:fail|fails|failed|failing|declined|declining|rejected|unavailable|timeout|cannot|can't|unable|nobody|not working|does nothing)\b|\bno (?:customer|orders?|purchases?)\b|\bnever (?:finish|finishes|complete|completes)\b|\b(?:do|does) not (?:finish|complete)\b|\bnot be (?:completed|processed)\b|\bmoney taken\b/.test(
+      /\b(?:fail|fails|failed|failing|declined|declining|rejected|unavailable|timeout|cannot|can't|unable|nobody|not working|does nothing|aren't going through|are not going through|isn't going through|is not going through|won't complete|will not complete)\b|\bno (?:customer|orders?|purchases?)\b|\bnever (?:finish|finishes|complete|completes)\b|\b(?:do|does) not (?:finish|complete)\b|\bnot be (?:completed|processed)\b|\bmoney taken\b/.test(
         clause,
       );
     const blockedBasketCompletion =
@@ -166,6 +170,26 @@ export function impactReasons(text: string): string[] {
   )
     reasons.push("Potential widespread service disruption");
   return [...new Set(reasons)];
+}
+export function incidentContext(text: string) {
+  const all = clauses(text);
+  return {
+    activeClauses: all.filter((clause) => !inactiveClause(clause)),
+    excludedClauses: all.filter(inactiveClause),
+    environment: /\b(?:staging|sandbox|test environment)\b/.test(normalize(text))
+      ? "Nonproduction mentioned; verify scope"
+      : "Not established; verify scope",
+  };
+}
+function workingAccess(text: string): boolean {
+  return /\b(?:access is working|can (?:successfully )?(?:log in(?:to)?|sign in(?:to)?)|login was restored|no login)\b/.test(
+    normalize(text),
+  );
+}
+function clearBillingRequest(text: string): boolean {
+  return /\b(?:please (?:send|provide)|(?:i )?(?:only )?need|can i (?:download|get))\b.{0,60}\b(?:invoice|receipt)\b/.test(
+    normalize(text),
+  );
 }
 function evidence(text: string) {
   const t = activeText(text);
@@ -198,7 +222,20 @@ export function applySafetyPolicy(draft: TriageDraft, text: string): TriageDraft
     if (priority === "P2 Medium" || priority === "P3 Low") priority = "P1 High";
     notes.push("Current account-entry blocker takes precedence over billing context");
   }
-  const mixed = e.categories.includes("Access issue") && e.categories.includes("Billing");
+  const explicitBilling =
+    !e.blocked &&
+    !e.impact.length &&
+    (draft.category === "Billing" || draft.category === "Access issue") &&
+    (draft.priority === "P2 Medium" || draft.priority === "P3 Low") &&
+    e.categories.includes("Billing") &&
+    workingAccess(text) &&
+    clearBillingRequest(text);
+  if (explicitBilling) {
+    category = "Billing";
+    priority = "P3 Low";
+    notes.push("Working access and an explicit billing request; no current access blocker detected");
+  }
+  const mixed = !explicitBilling && e.categories.includes("Access issue") && e.categories.includes("Billing");
   if (mixed)
     notes.push(
       e.blocked
@@ -221,13 +258,9 @@ export function rulesTriage(text: string): TriageDraft {
   const e = evidence(text);
   const [top, second] = e.scores;
   let category: Category = top!.hits.length ? top!.category : "Website incident";
-  if (
-    !e.blocked &&
-    e.categories.includes("Billing") &&
-    /\b(?:access is working|can log in|login was restored|no login)\b/.test(normalize(text))
-  )
-    category = "Billing";
-  if (!e.t && /\b(?:what should|what if|in the future|in case)\b/.test(normalize(text))) category = "Change request";
+  if (!e.blocked && e.categories.includes("Billing") && workingAccess(text)) category = "Billing";
+  if (!e.t && /\b(?:what should|what if|in the future|in case|training guide|training manual)\b/.test(normalize(text)))
+    category = "Change request";
   const priority: Priority = /\b(?:urgent|asap|cannot|can't|unable|blocked|deadline)\b/.test(e.t)
     ? "P1 High"
     : category === "Website incident" || category === "Access issue"
@@ -236,7 +269,9 @@ export function rulesTriage(text: string): TriageDraft {
   let confidence = top!.hits.length ? 0.55 + Math.min(top!.hits.length, 4) * 0.08 : 0.35;
   const tied = top!.hits.length > 0 && second!.hits.length === top!.hits.length;
   if (tied && !e.blocked) confidence -= 0.25;
-  if (text.trim().split(/\s+/).length < 8) confidence -= 0.15;
+  const clearBilling = category === "Billing" && !e.blocked && !e.impact.length && clearBillingRequest(text);
+  if (text.trim().split(/\s+/).length < 8 && !clearBilling) confidence -= 0.15;
+  if (clearBilling && (e.categories.length === 1 || workingAccess(text))) confidence = Math.max(confidence, 0.63);
   confidence = Math.max(0.1, Math.min(0.9, Number(confidence.toFixed(2))));
   const uncertain = [
     !top!.hits.length ? "No category evidence; default category needs confirmation." : "",
@@ -287,6 +322,12 @@ export function reviewDisposition(
 /** Extract source wording, prioritizing a current blocker, then an actionable request. */
 export function summarizeTicket(text: string): string {
   bounded(text);
+  if (
+    /\b(?:staging|sandbox|test environment)\b/i.test(text) &&
+    /\bproduction\b/i.test(text) &&
+    text.trim().length <= 140
+  )
+    return text.trim();
   const sentences = text
     .trim()
     .split(/(?<=[.!?;])\s+/)
@@ -301,7 +342,12 @@ export function summarizeTicket(text: string): string {
     .sort((a, b) => b.score - a.score || a.index - b.index);
   const first = ranked[0];
   if (!first) return "(empty ticket)";
-  const next = ranked.find((item) => item.index !== first.index && item.score >= 2);
+  const scopeQualification = ranked.find(
+    (item) =>
+      item.index !== first.index &&
+      /\bproduction\b.{0,35}\b(?:work|works|working|healthy|unaffected)\b/.test(normalize(item.sentence)),
+  );
+  const next = scopeQualification ?? ranked.find((item) => item.index !== first.index && item.score >= 2);
   // Reserve room for both the blocker and request when both exist.
   const clip = (value: string, limit: number) =>
     value.length <= limit ? value : value.slice(0, limit - 3).trimEnd() + "...";
