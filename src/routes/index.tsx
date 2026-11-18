@@ -853,8 +853,8 @@ function Lab() {
               History and pending edits are stored in localStorage on this browser, limited to the latest 250 records.
               Browser clearing or device changes may remove them. No account identity, multi-user synchronization or
               protected audit storage is provided. Legacy history is retained under its original key. JSON and CSV
-              exports include full synthetic ticket text. Live mode sends ticket text to the configured model service;
-              rules and simulated-outage modes do not send model requests.
+              exports include full synthetic ticket text. Live mode sends synthetic ticket text to OpenAI and uses API
+              credits; rules and simulated-outage modes do not send model requests.
             </p>
           </details>
         </footer>

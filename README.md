@@ -24,3 +24,28 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Lesson 11: OpenAI connection
+
+The live engine now calls the OpenAI Responses API from a TanStack server function using
+**`OpenAIKey`** (case-sensitive), the existing secret configured in Lovable. It is never a
+`VITE_*` variable and must never be committed, entered in the browser, or returned to the client.
+The historical original brief above described the earlier built-in gateway; this section supersedes
+that provider choice following the owner's request to use their OpenAI key.
+
+After this branch is merged into the connected `main` branch, allow Lovable to sync and rebuild.
+Publishing is a separate step. Confirm the secret is available to the application's server runtime,
+not merely stored in an unrelated project's secret manager. No database or Supabase function is needed.
+Select **Live model with rules fallback**, acknowledge synthetic-only use, then analyze a sample ticket.
+A successful call displays `Live model: gpt-6-astra`. A missing/invalid key, unavailable model,
+quota error, timeout, incomplete/refused response, or invalid JSON produces explicitly labeled rules fallback.
+Manual review and escalation safeguards remain unchanged. Rules mode makes no API requests.
+
+Requests use `store: false`, a 30-second timeout, a 4,000-character input limit and a 1,600-token
+output cap. Live calls incur OpenAI API usage. The unauthenticated educational demo has best-effort
+per-server-instance limits of ten calls/minute and two concurrent calls. These reset on restarts and
+are **not** a global quota or abuse-proof spending cap. Configure provider usage controls and restrict
+access before wider use; production needs authentication and shared rate limiting. Use only synthetic data.
+
+Verify locally with `npm install`, `npm test`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+Integration tests mock OpenAI and do not use a real key or prove deployment connectivity.
