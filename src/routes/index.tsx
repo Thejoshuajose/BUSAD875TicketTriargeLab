@@ -36,6 +36,10 @@ export const Route = createFileRoute("/")({
         name: "description",
         content: "A synthetic-ticket learning workbench with human review and browser-local records.",
       },
+      { property: "og:title", content: "FIWB Ticket Triage Lab | Review workbench" },
+      { property: "og:description", content: "A synthetic-ticket learning workbench with human review and browser-local records." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -117,476 +121,788 @@ function Copy({ text, label }: { text: string; label: string }) {
   );
 }
 function csvCell(value: unknown) {
-  const s = String(value …12591 tokens truncated….08 85);
-  color: oklch(0.4 0.07 70);
+  const s = String(value ?? "");
+  return `"${(/^[\s]*[=+\-@\t\r\n]/.test(s) ? "'" : "") + s.replace(/"/g, '""')}"`;
 }
-.edit-fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  min-width: 0;
-  display: grid;
-  gap: 17px;
-}
-.edit-fieldset:disabled .field {
-  background: oklch(0.97 0.005 230);
-  opacity: 1;
-  color: var(--foreground);
-}
-.optional {
-  font-size: 0.72rem;
-  font-weight: 400;
-  color: var(--muted-foreground);
-  margin-left: 5px;
-}
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-textarea.summary-input {
-  min-height: 70px;
-}
-textarea.rationale-input {
-  min-height: 105px;
-}
-.decision-gate {
-  border-top: 1px solid var(--border);
-  margin-top: 23px;
-  padding-top: 20px;
-}
-.ack {
-  display: flex;
-  gap: 10px;
-  font-size: 0.81rem;
-  cursor: pointer;
-  min-height: 44px;
-  align-items: flex-start;
-}
-.ack input {
-  width: 21px;
-  height: 21px;
-  flex-shrink: 0;
-  margin-top: 2px;
-  accent-color: var(--primary);
-}
-.ack .muted {
-  display: block;
-  font-size: 0.73rem;
-  margin-top: 3px;
-}
-.decision-gate > button {
-  margin: 16px 0 10px;
-}
-.validation {
-  margin-top: 12px;
-  font-size: 0.8rem;
-  color: var(--danger);
-}
-.decision-receipt {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  padding: 16px;
-  background: var(--soft-teal);
-  border-radius: 7px;
-  color: var(--primary);
-}
-.technical-details {
-  border-top: 1px solid var(--border);
-}
-.technical-details > summary {
-  padding: 17px 24px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  min-height: 44px;
-}
-.technical-details summary span {
-  font-size: 0.75rem;
-  font-weight: 400;
-  margin-left: 10px;
-}
-.details-content {
-  padding: 0 24px 24px;
-}
-.details-content .button-row {
-  margin: 14px 0;
-  align-items: flex-start;
-}
-.copy-control {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.code {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  background: oklch(0.97 0.008 230);
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  max-height: 360px;
-  overflow: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.button-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.tag {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 5px 9px;
-  border-radius: 5px;
-  background: oklch(0.93 0.014 230);
-  color: var(--foreground);
-  white-space: nowrap;
-}
-.tag-danger {
-  color: oklch(0.4 0.13 30);
-  background: oklch(0.95 0.028 30);
-}
-.tag-pending {
-  color: oklch(0.39 0.07 75);
-  background: oklch(0.95 0.045 85);
-}
-.tag-success {
-  color: oklch(0.35 0.07 175);
-  background: var(--soft-teal);
-}
-.queue-filters {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
-  background: oklch(0.986 0.002 230);
-  border-bottom: 1px solid var(--border);
-}
-.queue-filters .field {
-  margin: 0;
-}
-.search-field {
-  position: relative;
-  flex: 1;
-}
-.search-field svg {
-  position: absolute;
-  left: 12px;
-  top: 13px;
-  color: var(--muted-foreground);
-}
-.search-field input {
-  padding-left: 38px;
-}
-.filter-field {
-  width: 210px;
-}
-.queue-empty {
-  padding: 32px 24px;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 8px;
-  color: var(--muted-foreground);
-  font-size: 0.85rem;
-  text-align: center;
-}
-.queue-empty svg {
-  margin-bottom: 5px;
-}
-.queue-empty strong {
-  color: var(--foreground);
-  font-weight: 600;
-}
-.queue-item {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  padding: 17px 24px;
-  border-bottom: 1px solid var(--border);
-}
-.queue-item:last-child {
-  border: 0;
-}
-.queue-item.selected {
-  background: oklch(0.975 0.016 185);
-  box-shadow: inset 3px 0 var(--primary);
-}
-.queue-ticket {
-  flex: 1;
-  min-width: 0;
-}
-.queue-ticket h3 {
-  font-size: 0.88rem;
-  margin: 4px 0;
-  overflow-wrap: anywhere;
-}
-.queue-item button {
-  white-space: nowrap;
-}
-.notice {
-  padding: 12px 16px;
-  font-size: 0.85rem;
-  border-radius: 7px;
-  margin-bottom: 18px;
-  border: 1px solid var(--border);
-}
-.notice.feedback {
-  background: var(--soft-teal);
-}
-.notice.danger {
-  background: oklch(0.96 0.025 30);
-  color: var(--danger);
-}
-.lab-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 32px;
-  font-size: 0.76rem;
-  color: var(--muted-foreground);
-  padding: 3px 0 20px;
-}
-.lab-footer strong {
-  color: var(--foreground);
-  font-weight: 600;
-}
-.lab-footer p {
-  margin-top: 6px;
-}
-.lab-footer details {
-  max-width: 540px;
-  flex: 1;
-}
-.lab-footer summary {
-  min-height: 44px;
-}
-.skip-link {
-  position: fixed;
-  top: -100px;
-  left: 20px;
-  z-index: 100;
-  background: var(--card);
-  color: var(--foreground);
-  padding: 12px;
-}
-.skip-link:focus {
-  top: 10px;
-}
-@media (min-width: 1100px) {
-  .lab-footer details {
-    text-align: right;
-  }
-  .lab-footer details[open] {
-    text-align: left;
-  }
-}
-@media (max-width: 1000px) {
-  .metric {
-    padding: 14px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  .intake-grid {
-    grid-template-columns: minmax(0, 1fr) 250px;
-    gap: 20px;
-  }
-  .engine-box {
-    padding-left: 20px;
-  }
-  .review-grid {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  }
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  .queue-item {
-    gap: 12px;
-  }
-}
-@media (max-width: 760px) {
-  .topbar {
-    padding: 17px 18px;
-  }
-  .lab-label {
-    display: none;
-  }
-  .workspace {
-    padding: 24px 16px;
-  }
-  .page-heading {
-    align-items: flex-start;
-  }
-  .page-heading > a {
-    display: none;
-  }
-  .metrics {
-    gap: 9px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .metric {
-    flex-direction: row;
-    align-items: center;
-  }
-  .metric span {
-    max-width: 100px;
-    font-size: 0.73rem;
-  }
-  .section-heading {
-    padding: 18px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-  .intake-grid,
-  .review-grid {
-    grid-template-columns: 1fr;
-  }
-  .intake-grid {
-    padding: 18px;
-    gap: 20px;
-  }
-  .engine-box {
-    padding: 20px 0 0;
-    border-left: 0;
-    border-top: 1px solid var(--border);
-  }
-  .analyze-button {
-    margin-top: 18px;
-  }
-  .source-pane {
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-    padding: 18px;
-  }
-  .review-fields {
-    padding: 18px;
-  }
-  .form-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .queue-filters {
-    flex-wrap: wrap;
-    padding: 16px 18px;
-  }
-  .search-field {
-    flex-basis: 100%;
-  }
-  .filter-field {
-    flex: 1;
-    width: auto;
-  }
-  .queue-item {
-    flex-wrap: wrap;
-    padding: 17px 18px;
-  }
-  .queue-ticket {
-    flex-basis: 100%;
-  }
-  .queue-item > button {
-    margin-left: auto;
-  }
-  .technical-details > summary {
-    padding: 16px 18px;
-  }
-  .technical-details summary span {
-    display: block;
-    margin: 5px 0 0;
-  }
-  .details-content {
-    padding: 0 18px 18px;
-  }
-  .lab-footer {
-    flex-direction: column;
-    gap: 15px;
-  }
-  .lab-footer details {
-    max-width: none;
-  }
-}
-@media (max-width: 420px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  .field-help {
-    flex-direction: column;
-    gap: 3px;
-  }
-  .empty-steps {
-    gap: 6px;
-    font-size: 0.66rem;
-  }
-  .brand strong {
-    font-size: 0.9rem;
-  }
-  .brand-mark {
-    width: 36px;
-    height: 36px;
-  }
-  .decision-gate > button {
-    width: 100%;
-  }
-  .queue-item > .tag {
-    white-space: normal;
-    max-width: 45%;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
+function makeCsv(records: RecordEntry[]) {
+  const cols = [
+    "id",
+    "created_at",
+    "decision_at",
+    "decision",
+    "engine",
+    "policy",
+    "decision_policy",
+    "analyzed_input",
+    "summary",
+    "category",
+    "priority",
+    "suggested_owner",
+    "confidence",
+    "rationale",
+    "notes",
+    "reasons",
+  ];
+  return [
+    cols.map(csvCell).join(","),
+    ...records.map((r) => {
+      const d = r.final ?? r.review ?? r.draft;
+      return [
+        r.id,
+        r.time,
+        r.decidedAt,
+        r.decision,
+        r.mode,
+        r.policyVersion,
+        r.decisionPolicyVersion,
+        r.input,
+        d.summary,
+        d.category,
+        d.priority,
+        d.suggested_owner,
+        d.confidence,
+        d.rationale,
+        r.notes,
+        (r.reviewReasons ?? r.escalation).join("; "),
+      ]
+        .map(csvCell)
+        .join(",");
+    }),
+  ].join("\r\n");
 }
 
-.context-evidence {
-  margin: 1rem 0;
-  padding: 0.8rem 0;
-  border-block: 1px solid var(--border);
-}
-.context-evidence summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-.context-evidence li {
-  font-size: 0.875rem;
-  overflow-wrap: anywhere;
-}
-.evidence-list {
-  display: grid;
-  gap: 0.6rem;
-  margin-top: 1rem;
-}
-.evidence-list details {
-  padding: 0.8rem 1rem;
-  border: 1px solid #d9e1e7;
-  border-radius: 0.5rem;
-}
-.evidence-list summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-.evidence-list p {
-  margin-top: 0.6rem;
-  overflow-wrap: anywhere;
-}
-.queue-filters {
-  flex-wrap: wrap;
-}
-@media (max-width: 640px) {
-  .section-heading {
-    flex-wrap: wrap;
-    gap: 0.8rem;
+function Lab() {
+  const [text, setText] = useState("");
+  const [engine, setEngine] = useState("rules");
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const request = useRef(0);
+  const [records, setRecords] = useState<RecordEntry[]>([]);
+  const recordsRef = useRef<RecordEntry[]>([]);
+  const [ready, setReady] = useState(false);
+  const [storageError, setStorageError] = useState("");
+  const storageBlocked = useRef(false);
+  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [ack, setAck] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const current = records.find((r) => r.id === currentId);
+  const edit = current?.final ?? current?.review ?? current?.draft;
+  const disposition = current && edit ? reviewDisposition(edit, current.input) : null;
+  const completed = current?.decision !== "pending";
+  const valid =
+    !!edit &&
+    edit.summary.trim().length > 0 &&
+    edit.summary.length <= 140 &&
+    edit.rationale.trim().length > 0 &&
+    edit.suggested_owner.trim().length > 0;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
+      if (raw) {
+        if (raw.length > 5000000) throw new Error("Storage exceeds safe read limit");
+        const parsed: unknown = JSON.parse(raw);
+        if (!Array.isArray(parsed)) throw new Error("Invalid records");
+        const checked = parsed.map((value) => recordSchema.safeParse(value));
+        const good = checked.flatMap((value) => (value.success ? [value.data] : []));
+        if (good.length !== parsed.length || new Set(good.map((r) => r.id)).size !== good.length)
+          throw new Error("Invalid record shape or duplicate ID");
+        recordsRef.current = good.slice(0, 250);
+        setRecords(recordsRef.current);
+      }
+    } catch {
+      storageBlocked.current = true;
+      setStorageError(
+        "Saved history could not be read safely. Existing storage has been left untouched. New work is session-only; export it before leaving.",
+      );
+    }
+    setReady(true);
+    return () => {
+      request.current += 1;
+    };
+  }, []);
+  function save(next: RecordEntry[]) {
+    recordsRef.current = next.slice(0, 250);
+    setRecords(recordsRef.current);
+    if (storageBlocked.current) return;
+    try {
+      localStorage.setItem(KEY, JSON.stringify(recordsRef.current));
+      setStorageError("");
+    } catch {
+      setStorageError(
+        "Browser storage is unavailable or full. Changes are kept in this session only. Export your records before leaving.",
+      );
+    }
   }
-  .queue-filters > * {
-    width: 100%;
+  function update(fields: Partial<TriageDraft>, notes?: string) {
+    if (!current || !edit || completed) return;
+    setAck(false);
+    setFeedback("");
+    save(
+      recordsRef.current.map((r) =>
+        r.id === current.id ? { ...r, review: { ...edit, ...fields }, ...(notes !== undefined ? { notes } : {}) } : r,
+      ),
+    );
   }
-  .evidence-list summary {
-    font-size: 0.9rem;
+  async function analyze() {
+    if (busyRef.current || !ready || !text.trim() || text.length > 4000) return;
+    if (recordsRef.current.length >= 250) {
+      setFeedback(
+        "Queue capacity reached. Existing records are preserved. Export your history; use a separate browser profile for a new test session.",
+      );
+      return;
+    }
+    busyRef.current = true;
+    setBusy(true);
+    setFeedback("");
+    setAck(false);
+    const token = ++request.current;
+    const input = text.trim();
+    const selectedEngine = engine;
+    let draft: TriageDraft;
+    let mode: "live" | "rules" = "rules";
+    let modeNote = "";
+    try {
+      if (selectedEngine === "live") {
+        const result = await aiTriage({ data: { text: input } });
+        if (result.mode === "live") {
+          draft = draftSchema.parse(result.draft);
+          mode = "live";
+          modeNote = `Live model: ${result.model}`;
+        } else {
+          draft = rulesTriage(input);
+          modeNote = `Rules fallback: ${result.reason}`;
+        }
+      } else {
+        draft = rulesTriage(input);
+        modeNote =
+          selectedEngine === "simulate"
+            ? "Simulated outage: rules fallback used. No model request sent."
+            : "Rules-only demonstration. No model request sent.";
+      }
+    } catch {
+      draft = rulesTriage(input);
+      modeNote = "Live model unavailable or invalid output: rules fallback used.";
+    }
+    if (token !== request.current) return;
+    const initialDisposition = reviewDisposition(draft, input);
+    const entry: RecordEntry = {
+      id: crypto.randomUUID(),
+      time: new Date().toISOString(),
+      input,
+      mode,
+      modeNote,
+      draft,
+      decision: "pending",
+      escalation: initialDisposition.kind === "escalate" ? initialDisposition.reasons : [],
+      reviewReasons: initialDisposition.reasons,
+      disposition: initialDisposition.kind,
+      policyVersion: POLICY_VERSION,
+      notes: "",
+    };
+    save([entry, ...recordsRef.current]);
+    setCurrentId(entry.id);
+    setBusy(false);
+    busyRef.current = false;
+    setFeedback("Draft ready. Read the original ticket, review the fields, then record a local decision.");
+    setTimeout(() => reviewHeading.current?.focus(), 0);
   }
+  function decide() {
+    const record = recordsRef.current.find((r) => r.id === currentId);
+    if (!record || record.decision !== "pending" || !edit || !ack || !valid || !disposition) return;
+    if (disposition.kind === "clarify" && !record.notes?.trim()) return;
+    const changed = JSON.stringify(record.draft) !== JSON.stringify(edit);
+    const decision: RecordEntry["decision"] =
+      disposition.kind === "escalate"
+        ? "escalated"
+        : disposition.kind === "clarify"
+          ? "clarification needed"
+          : changed
+            ? "edited & accepted"
+            : "accepted";
+    const corrections = Object.keys(edit)
+      .filter(
+        (key) =>
+          JSON.stringify(record.draft[key as keyof TriageDraft]) !== JSON.stringify(edit[key as keyof TriageDraft]),
+      )
+      .map((field) => ({
+        field,
+        before: record.draft[field as keyof TriageDraft],
+        after: edit[field as keyof TriageDraft],
+      }));
+    save(
+      recordsRef.current.map((r) =>
+        r.id === record.id
+          ? {
+              ...r,
+              final: edit,
+              decision,
+              escalation: disposition.kind === "escalate" ? disposition.reasons : [],
+              reviewReasons: disposition.reasons,
+              disposition: disposition.kind,
+              decidedAt: new Date().toISOString(),
+              decisionPolicyVersion: POLICY_VERSION,
+              corrections,
+            }
+          : r,
+      ),
+    );
+    setAck(false);
+    setFeedback(`${labels[decision]} locally. No message was sent and no ticket was routed.`);
+  }
+  function download(format: "json" | "csv", selected = recordsRef.current) {
+    try {
+      const content =
+        format === "json"
+          ? JSON.stringify(
+              selected.map((r) => ({ ...r, analyzed_input: r.input })),
+              null,
+              2,
+            )
+          : makeCsv(selected);
+      const blob = new Blob([format === "csv" ? "\uFEFF" + content : content], {
+        type: format === "json" ? "application/json" : "text/csv;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `fiwb-triage-${new Date().toISOString().slice(0, 10)}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setFeedback(`${format.toUpperCase()} download requested. Check your browser downloads.`);
+    } catch {
+      setFeedback("Export failed. Try copying the JSON from record details.");
+    }
+  }
+  const visible = records.filter(
+    (r) =>
+      (priorityFilter === "all" || (r.final ?? r.review ?? r.draft).priority === priorityFilter) &&
+      (filter === "all" || (filter === "accepted" ? r.decision.includes("accepted") : r.decision === filter)) &&
+      `${r.input} ${r.id} ${(r.final ?? r.review ?? r.draft).summary}`.toLowerCase().includes(search.toLowerCase()),
+  );
+  const output = current
+    ? JSON.stringify({ ...current, analyzed_input: current.input, review_disposition: disposition }, null, 2)
+    : "";
+  return (
+    <div className="lab-shell">
+      <a className="skip-link" href="#main">
+        Skip to workbench
+      </a>
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden="true">
+            <ClipboardCheck size={23} />
+          </span>
+          <div>
+            <strong>
+              FIWB <span className="brand-divider">/</span> Ticket Triage Lab
+            </strong>
+            <span className="topbar-sub">Support operations · Learning workbench</span>
+          </div>
+        </div>
+        <span className="lab-label">
+          <FlaskConical size={15} aria-hidden="true" /> Educational prototype
+        </span>
+      </header>
+      <main id="main" className="workspace">
+        <div className="page-heading">
+          <div>
+            <p className="eyebrow">HUMAN-IN-THE-LOOP TRIAGE</p>
+            <h1>Ticket review workbench</h1>
+            <p className="muted">Analyze a synthetic request. Check the draft. Record your decision.</p>
+          </div>
+          <a className="text-link" href="#queue">
+            Review queue <ArrowRight size={17} aria-hidden="true" />
+          </a>
+        </div>
+        <div className="safety-notice">
+          <ShieldAlert size={18} aria-hidden="true" />
+          <p>
+            <strong>Synthetic tickets only.</strong> No client emails, personal information or secrets. Decisions stay
+            in this browser; no tickets are routed.
+          </p>
+        </div>
+        <section className="metrics" aria-label="Local review counts">
+          {[
+            ["Total records", records.length],
+            ["Pending review", records.filter((r) => r.decision === "pending").length],
+            ["Escalations recorded", records.filter((r) => r.decision === "escalated").length],
+            ["Accepted", records.filter((r) => r.decision.includes("accepted")).length],
+          ].map(([label, value]) => (
+            <div className="metric" key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </section>
+        {storageError && (
+          <div className="notice danger" role="alert">
+            {storageError}
+          </div>
+        )}
+        <div role="status" aria-live="polite" className={feedback ? "notice feedback" : "sr-only"}>
+          {feedback}
+        </div>
+        <section className="panel intake" aria-labelledby="intake-heading">
+          <div className="section-heading">
+            <div className="step-title">
+              <span className="step">01</span>
+              <div>
+                <h2 id="intake-heading">Start with a ticket</h2>
+                <p className="muted small">Use a sample or write your own synthetic scenario.</p>
+              </div>
+            </div>
+            <span className="subtle-label">{POLICY_VERSION}</span>
+          </div>
+          <div className="intake-grid">
+            <div>
+              <label className="field-label" htmlFor="ticket">
+                Ticket text
+              </label>
+              <textarea
+                id="ticket"
+                className="field ticket-input"
+                value={text}
+                maxLength={4000}
+                disabled={busy}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Describe what happened, who is affected, and any urgency…"
+                aria-describedby="ticket-help"
+              />
+              <div className="field-help" id="ticket-help">
+                <span>Only the analyzed snapshot is saved with each record.</span>
+                <span>{text.length.toLocaleString()} / 4,000</span>
+              </div>
+              <div className="sample-row">
+                <span className="small muted">Try a scenario</span>
+                <div className="samples">
+                  {SAMPLES.map((s) => (
+                    <button className="sample" disabled={busy} key={s.label} onClick={() => setText(s.text)}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="engine-box">
+              <label className="field-label" htmlFor="engine">
+                Analysis engine
+              </label>
+              <select
+                id="engine"
+                className="field"
+                value={engine}
+                disabled={busy}
+                onChange={(e) => setEngine(e.target.value)}
+              >
+                <option value="rules">Rules-only demonstration</option>
+                <option value="live">Live model with rules fallback</option>
+                <option value="simulate">Simulated AI outage</option>
+              </select>
+              <p className="small muted">
+                {engine === "rules"
+                  ? "Reproducible keyword rules, not AI inference. A useful baseline for testing."
+                  : engine === "simulate"
+                    ? "Tests the fallback path without sending a model request."
+                    : "Sends this synthetic ticket to the configured model service. If unavailable, uses rules and labels the result."}
+              </p>
+              <button
+                className="btn-primary analyze-button"
+                disabled={!text.trim() || busy || !ready}
+                onClick={analyze}
+              >
+                {busy ? "Analyzing ticket…" : "Analyze ticket"}
+                <ArrowRight size={18} aria-hidden="true" />
+              </button>
+              <p className="small muted">Every result requires your review.</p>
+            </div>
+          </div>
+        </section>
+        <section className="panel review-panel" aria-labelledby="review-heading">
+          <div className="section-heading">
+            <div className="step-title">
+              <span className="step">02</span>
+              <div>
+                <h2 ref={reviewHeading} tabIndex={-1} id="review-heading">
+                  {completed && current ? "Inspect local decision" : "Review & decide"}
+                </h2>
+                <p className="muted small">Compare the original request with the proposed triage.</p>
+              </div>
+            </div>
+            {current && (
+              <span className={`tag ${current.decision === "escalated" ? "tag-danger" : ""}`}>
+                {labels[current.decision]}
+              </span>
+            )}
+          </div>
+          {!current || !edit || !disposition ? (
+            <div className="empty-review">
+              <FileText size={30} aria-hidden="true" />
+              <h3>Your review starts here</h3>
+              <p>Analyze a ticket above, or resume a pending case from the queue below.</p>
+              <div className="empty-steps">
+                <span>Original request</span>
+                <ChevronRight size={15} />
+                <span>Editable draft</span>
+                <ChevronRight size={15} />
+                <span>Local decision</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="review-grid">
+                <aside className="source-pane">
+                  <div className="section-heading compact">
+                    <h3>Original ticket</h3>
+                    <span className="subtle-label">Read-only snapshot</span>
+                  </div>
+                  <p className="original-ticket">{current.input}</p>
+                  <dl className="record-meta">
+                    <div>
+                      <dt>Record</dt>
+                      <dd className="record-id">{current.id.slice(0, 8)}</dd>
+                    </div>
+                    <div>
+                      <dt>Analyzed</dt>
+                      <dd>
+                        {new Date(current.time).toString() === "Invalid Date"
+                          ? current.time
+                          : new Date(current.time).toLocaleString()}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Actual engine</dt>
+                      <dd>{current.mode === "live" ? "Live model" : "Rules-only"}</dd>
+                    </div>
+                    <div>
+                      <dt>Draft policy</dt>
+                      <dd>{current.policyVersion ?? "Legacy / unknown"}</dd>
+                    </div>
+                  </dl>
+                  <p className="engine-note">{current.modeNote}</p>
+                  <details className="context-evidence">
+                    <summary>Incident context evidence</summary>
+                    <p className="small">{incidentContext(current.input).environment}</p>
+                    <p className="small">
+                      Heuristic exclusions below are not verified facts. Check the full original before deciding.
+                    </p>
+                    <strong className="small">Excluded from current-impact matching</strong>
+                    <ul>
+                      {incidentContext(current.input).excludedClauses.length ? (
+                        incidentContext(current.input).excludedClauses.map((c, i) => <li key={i}>{c}</li>)
+                      ) : (
+                        <li>No explicit exclusion cue found.</li>
+                      )}
+                    </ul>
+                  </details>
+                  <div className="confidence">
+                    <span>
+                      Draft confidence <strong>{Math.round(edit.confidence * 100)}%</strong>
+                    </span>
+                    <meter min={0} max={1} value={edit.confidence} aria-label="Uncalibrated draft confidence" />
+                    <p className="small muted">{edit.uncertainty}</p>
+                    <p className="small muted">Heuristic or model-reported, not a calibrated probability.</p>
+                  </div>
+                </aside>
+                <div className="review-fields">
+                  <div className={`policy-banner ${disposition.kind}`}>
+                    <strong>
+                      {disposition.kind === "escalate"
+                        ? "Manual incident escalation required"
+                        : disposition.kind === "clarify"
+                          ? "Clarification needed before acceptance"
+                          : "Ready for human review"}
+                    </strong>
+                    {disposition.reasons.length ? (
+                      <ul>
+                        {disposition.reasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No mandatory escalation flag detected. Check the facts yourself.</p>
+                    )}
+                  </div>
+                  <fieldset disabled={completed} className="edit-fieldset">
+                    <legend className="sr-only">Review triage fields</legend>
+                    <label className="field-label">
+                      Summary <span className="optional">Required · 1–140 characters</span>
+                      <textarea
+                        className="field summary-input"
+                        maxLength={140}
+                        value={edit.summary}
+                        onChange={(e) => update({ summary: e.target.value })}
+                      />
+                    </label>
+                    <div className="form-grid">
+                      <label className="field-label">
+                        Category
+                        <select
+                          className="field"
+                          value={edit.category}
+                          onChange={(e) => {
+                            const category = e.target.value as Category;
+                            update({ category, suggested_owner: OWNERS[category] });
+                          }}
+                        >
+                          {CATEGORIES.map((c) => (
+                            <option key={c}>{c}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field-label">
+                        Priority
+                        <select
+                          className="field"
+                          value={edit.priority}
+                          onChange={(e) => update({ priority: e.target.value as Priority })}
+                        >
+                          {PRIORITIES.map((p) => (
+                            <option key={p}>{p}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <label className="field-label">
+                      Suggested owner <span className="optional">Suggestion only</span>
+                      <input
+                        className="field"
+                        maxLength={500}
+                        value={edit.suggested_owner}
+                        onChange={(e) => update({ suggested_owner: e.target.value })}
+                      />
+                    </label>
+                    <label className="field-label">
+                      Rationale <span className="optional">Required</span>
+                      <textarea
+                        className="field rationale-input"
+                        maxLength={10000}
+                        value={edit.rationale}
+                        onChange={(e) => update({ rationale: e.target.value })}
+                      />
+                    </label>
+                    <label className="field-label">
+                      Decision notes{" "}
+                      <span className="optional">
+                        {disposition.kind === "clarify" ? "Required: what needs clarification?" : "Optional"}
+                      </span>
+                      <textarea
+                        className="field"
+                        maxLength={2000}
+                        value={current.notes ?? ""}
+                        onChange={(e) => update({}, e.target.value)}
+                        placeholder="Capture your reasoning or the question to ask next."
+                      />
+                    </label>
+                  </fieldset>
+                  {completed ? (
+                    <div className="decision-receipt">
+                      <ClipboardCheck size={20} aria-hidden="true" />
+                      <div>
+                        <strong>{labels[current.decision]} locally</strong>
+                        <p className="small">
+                          {current.decidedAt ? new Date(current.decidedAt).toLocaleString() : "Legacy record"} · No
+                          ticket routed or message sent.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="decision-gate">
+                      <label className="ack">
+                        <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+                        <span>
+                          I have read the original ticket and reviewed every field myself.{" "}
+                          <span className="muted">This is a learning acknowledgment, not identity verification.</span>
+                        </span>
+                      </label>
+                      {!valid && (
+                        <p className="validation" role="status">
+                          Enter a summary of 1–140 characters, an owner and a rationale to continue.
+                        </p>
+                      )}
+                      <button
+                        className={disposition.kind === "escalate" ? "btn-danger" : "btn-primary"}
+                        disabled={!ack || !valid || (disposition.kind === "clarify" && !current.notes?.trim())}
+                        onClick={decide}
+                      >
+                        {disposition.kind === "escalate"
+                          ? "Record manual escalation locally"
+                          : disposition.kind === "clarify"
+                            ? "Record clarification needed locally"
+                            : "Accept triage locally"}
+                        <ClipboardCheck size={17} aria-hidden="true" />
+                      </button>
+                      <p className="small muted">
+                        Editing any field resets acknowledgment. Pending edits are saved when browser storage is
+                        available.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <details className="technical-details">
+                <summary>
+                  Record details & JSON{" "}
+                  <span className="muted">Original draft, reviewed fields and correction history</span>
+                </summary>
+                <div className="details-content">
+                  <p className="small muted">
+                    Browser-local learning record, not a verified enterprise audit trail. Review decisions use current
+                    policy {POLICY_VERSION}.
+                  </p>
+                  <div className="button-row">
+                    <Copy text={output} label="Copy record JSON" />
+                    <button className="btn-secondary" onClick={() => download("json", [current])}>
+                      <Download size={16} aria-hidden="true" />
+                      Export record JSON
+                    </button>
+                  </div>
+                  <pre className="code" tabIndex={0} aria-label="Record JSON">
+                    {output}
+                  </pre>
+                </div>
+              </details>
+            </>
+          )}
+        </section>
+        <EvaluationPanel />
+        <section className="panel queue-panel" id="queue" aria-labelledby="queue-heading">
+          <div className="section-heading">
+            <div className="step-title">
+              <span className="step">03</span>
+              <div>
+                <h2 id="queue-heading">Review queue & history</h2>
+                <p className="small muted">
+                  Up to 250 records in this browser. New intake stops at capacity rather than discarding older records.
+                </p>
+              </div>
+            </div>
+            <div className="button-row">
+              <button className="btn-secondary" disabled={!records.length} onClick={() => download("json")}>
+                <Download size={16} aria-hidden="true" />
+                JSON
+              </button>
+              <button className="btn-secondary" disabled={!records.length} onClick={() => download("csv")}>
+                <Download size={16} aria-hidden="true" />
+                CSV
+              </button>
+            </div>
+          </div>
+          <div className="queue-filters">
+            <label className="search-field">
+              <Search size={18} aria-hidden="true" />
+              <span className="sr-only">Search ticket text, summary or record ID</span>
+              <input
+                className="field"
+                type="search"
+                placeholder="Search tickets or record ID"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </label>
+            <label className="filter-field">
+              <span className="sr-only">Filter by decision status</span>
+              <select className="field" value={filter} onChange={(e) => setFilter(e.target.value)}>
+                <option value="all">All statuses</option>
+                <option value="pending">Pending review</option>
+                <option value="accepted">Accepted</option>
+                <option value="escalated">Escalation recorded</option>
+                <option value="clarification needed">Clarification needed</option>
+              </select>
+            </label>
+            <label className="filter-field">
+              <span className="sr-only">Filter by priority</span>
+              <select className="field" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+                <option value="all">All priorities</option>
+                {PRIORITIES.map((p) => (
+                  <option key={p}>{p}</option>
+                ))}
+              </select>
+            </label>
+            <button className="btn-secondary" disabled={!visible.length} onClick={() => download("json", visible)}>
+              Export filtered JSON
+            </button>
+            <span className="small muted">
+              {visible.length} of {records.length}
+            </span>
+          </div>
+          {!visible.length ? (
+            <div className="queue-empty">
+              <Inbox size={26} aria-hidden="true" />
+              <strong>{records.length ? "No matching records" : "A clean queue, ready for your first case"}</strong>
+              <p>
+                {records.length
+                  ? "Try a different search or status filter."
+                  : "Analyze a synthetic ticket to create a pending review."}
+              </p>
+            </div>
+          ) : (
+            <div className="queue-list">
+              {visible.map((r) => {
+                const d = r.final ?? r.review ?? r.draft;
+                return (
+                  <article className={`queue-item ${r.id === currentId ? "selected" : ""}`} key={r.id}>
+                    <div className="queue-ticket">
+                      <span className="record-id">
+                        {r.id.slice(0, 8)} <span className="muted">· {r.mode === "live" ? "Live model" : "Rules"}</span>
+                      </span>
+                      <h3>{d.summary || "Untitled review"}</h3>
+                      <p className="small muted">
+                        {d.category} · {d.priority}
+                      </p>
+                    </div>
+                    <span
+                      className={`tag ${r.decision === "escalated" ? "tag-danger" : r.decision === "pending" || r.decision === "clarification needed" ? "tag-pending" : "tag-success"}`}
+                    >
+                      {labels[r.decision]}
+                    </span>
+                    <button
+                      className="btn-secondary"
+                      disabled={busy}
+                      aria-label={`${r.decision === "pending" ? "Resume" : "Inspect"} record ${r.id.slice(0, 8)}`}
+                      onClick={() => {
+                        setCurrentId(r.id);
+                        setAck(false);
+                        setFeedback("");
+                        setTimeout(() => reviewHeading.current?.focus(), 0);
+                      }}
+                    >
+                      {r.decision === "pending" ? "Resume review" : "Inspect record"}
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+        <footer className="lab-footer">
+          <div>
+            <strong>Built for learning. Kept under human control.</strong>
+            <p>This standalone lab is not part of the FIWB Client Portal and is not production-ready.</p>
+          </div>
+          <details>
+            <summary>Policy, privacy & limitations</summary>
+            <p>
+              Use nonsensitive synthetic data only. Rules are limited language heuristics; they can miss context and
+              make mistakes. Incident signals and P0 require an escalation record. Low confidence requires
+              clarification, not automatic incident escalation. Input-based incident flags survive priority edits.
+            </p>
+            <p>
+              History and pending edits are stored in localStorage on this browser, limited to 250 records. New intake
+              stops at capacity. Browser clearing or device changes may remove them. No account identity, multi-user
+              synchronization or protected audit storage is provided. Legacy history is retained under its original key.
+              JSON and CSV exports include full synthetic ticket text. Live mode sends synthetic ticket text to OpenAI
+              and uses API credits; rules and simulated-outage modes do not send model requests.
+            </p>
+          </details>
+        </footer>
+      </main>
+    </div>
+  );
 }
